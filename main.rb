@@ -10,7 +10,7 @@ YC_ENDPOINT = 'https://storage.yandexcloud.net'
 YC_API = 'api.cloud.yandex.net'
 TG_BOT_API = 'https://api.telegram.org'
 WAIT_TIME = 2
-REPEAT_COUNT = 10
+REPEAT_COUNT = 30
 
 Aws.config.update(
   region: 'ru-central1',
@@ -77,18 +77,22 @@ end
 
 def telegram_bot
   Telegram::Bot::Client.run(ENV['TG_BOT_TOKEN']) do |bot|
-    bot.listen do |message|
-      if message.voice
-        file_name = voice_upload(message)
-        operation_id = speech_detect(file_name)
-        answer = get_rezult(operation_id, file_name)
-        bot.api.send_message(chat_id: message.chat.id, text: answer)
-      elsif message.text == '/start'
-        bot.api.send_message(chat_id: message.chat.id,
-                             text: "Привет, #{message.from.first_name}! Отправь голосовое, получи текст!")
-      else
-        bot.api.send_message(chat_id: message.chat.id, text: 'Распознаю только речь :)')
+    begin
+      bot.listen do |message|
+        if message.instance_of?(Telegram::Bot::Types::Message) && message.voice 
+          file_name = voice_upload(message)
+          operation_id = speech_detect(file_name)
+          answer = get_rezult(operation_id, file_name)
+          bot.api.send_message(chat_id: message.chat.id, text: answer)
+        elsif message.instance_of?(Telegram::Bot::Types::Message) && message.text == '/start'
+          bot.api.send_message(chat_id: message.chat.id,
+                              text: "Привет, #{message.from.first_name}! Отправь голосовое, получи текст!")
+        else
+          bot.api.send_message(chat_id: message.chat.id, text: 'Распознаю только речь :)')
+        end
       end
+    rescue Telegram::Bot::Exceptions::ResponseError => e
+      retry
     end
   end
 end
