@@ -19,8 +19,10 @@ def handle_voice(message, bot, yc_api)
   yc_api.file_remove(name)
 end
 
-def handle_other(message, bot)
-  if message.instance_of?(Telegram::Bot::Types::Message) && message.text == '/start'
+def message_handle(message, bot, yc_api)
+  if message.instance_of?(Telegram::Bot::Types::Message) && message.voice
+    handle_voice(message, bot, yc_api)
+  elsif message.instance_of?(Telegram::Bot::Types::Message) && message.text == '/start'
     bot.api.send_message(chat_id: message.chat.id,
                          text: "Привет, #{message.from.first_name}! Отправь голосовое, получи текст!")
   else
@@ -32,11 +34,7 @@ def telegram_bot
   yc_api = YandexCloudAPI.new
   Telegram::Bot::Client.run(ENV['TG_BOT_TOKEN']) do |bot|
     bot.listen do |message|
-      if message.instance_of?(Telegram::Bot::Types::Message) && message.voice
-        handle_voice(message, bot, yc_api)
-      else
-        handle_other(message, bot)
-      end
+      message_handle(message, bot, yc_api)
     end
   rescue Telegram::Bot::Exceptions::ResponseError => e
     retry

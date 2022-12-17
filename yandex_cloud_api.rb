@@ -13,6 +13,7 @@ Aws.config.update(
   credentials: Aws::Credentials.new(ENV['YC_ACCESS_KEY_ID'], ENV['YC_SECRET_ACCESS_KEY'])
 )
 
+# YandexCloudAPI
 class YandexCloudAPI
   attr_reader :client, :endpoint, :bucket, :header_api_key
 
